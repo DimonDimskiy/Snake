@@ -1,22 +1,22 @@
 import time
 import random
+from config import *
 
-
-START_ROW = 5
-START_COL = 20
-START_LENGTH = 3
-HEIGHT = 10
-WIDTH = 50
-EMPTY_CELL = " "
-SNAKE_CELL = "X"
-APPLE_CELL = "@"
+# START_ROW = 5  # todo вынести константы в отдельный файл .config
+# START_COL = 20
+# START_LENGTH = 3
+# HEIGHT = 10
+# WIDTH = 50
+# EMPTY_CELL = " "
+# SNAKE_CELL = "#"
+# APPLE_CELL = "@"
 
 
 EMPTY_FIELD = {(y, x): EMPTY_CELL for y in range(HEIGHT) for x in range(WIDTH)}
 START_SNAKE = [(START_ROW, x % WIDTH) for x in range((START_COL + 1) - START_LENGTH, (START_COL + 1))]
 
 
-def print_field(field_):
+def print_field(field_):  # todo заменить функцию отрисовкой в окне, вынести отдельным модулем
     rows = []
     for i in range(HEIGHT):
         row = []
@@ -30,12 +30,13 @@ def print_field(field_):
     print("-" * WIDTH)
 
 
-def generate_apple(snake_):
+def generate_apple(snake_, field_):
+    field_ = field_.copy()
     snake_ = snake_.copy()
-    while True:
-        apple = (random.randint(0, HEIGHT), random.randint(0, WIDTH))
-        if apple not in snake_:
-            break
+    for i in snake_:
+        if i in field_:
+            field_.pop(i)
+    apple = random.choice(list(field_.keys()))
     apple_pos = {apple: APPLE_CELL}
     return apple_pos
 
@@ -49,7 +50,7 @@ def new_cell(cells):
     is_moving_down = y_head_cell > y_second_cell and x_head_cell == x_second_cell  # todo учесть случай перехода через экран
     is_moving_up = y_head_cell < y_second_cell and x_head_cell == x_second_cell  # todo учесть случай перехода через экран
     is_moving_left = y_head_cell == y_second_cell and x_head_cell < x_second_cell  # todo учесть случай перехода через экран
-    is_moving_right = y_head_cell == y_second_cell and x_head_cell > x_second_cell  # todo учесть случай перехода через экран
+    is_moving_right = True #y_head_cell == y_second_cell and x_head_cell > x_second_cell  # todo учесть случай перехода через экран
 
     if is_moving_down:
         if turn_right:
@@ -87,9 +88,9 @@ def new_cell(cells):
 
 
 snake = START_SNAKE.copy()
-apple_dict = generate_apple(snake)
+apple_dict = generate_apple(snake, EMPTY_FIELD)
 while True:
-    time.sleep(0.5)
+    time.sleep(0.05)
 
     snake_dict = {i: SNAKE_CELL for i in snake}
     field = EMPTY_FIELD.copy()
@@ -100,11 +101,16 @@ while True:
 
     y_head, x_head = new_cell(snake)
 
+
+    if (y_head, x_head) in snake:
+        print("GAME OVER")  # todo добавить текущий счёт, добавить вывод максимального счета в конце игры, добавить файл в который будет записываться максимальный счёт
+        break
+
     if (y_head, x_head) not in apple_dict:
         snake.pop(0)
+        snake.append((y_head, x_head))
     else:
-        apple_dict = generate_apple(snake)
-    if (y_head, x_head) in snake:
-        print("GAME OVER")
-        break
-    snake.append((y_head, x_head))
+        snake.append((y_head, x_head))
+        apple_dict = generate_apple(snake_dict, field)
+
+
